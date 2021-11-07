@@ -2,127 +2,56 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using ElmSharp.Wearable;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using Tizen.Applications;
+using SharpColor = SixLabors.ImageSharp.Color;
+using ElmColor = ElmSharp.Color;
+using ElmImage = ElmSharp.Image;
+using SharpImage = SixLabors.ImageSharp.Image;
 
 namespace FastQR
 {
     public class FastQRWidget : WidgetBase
     {
         private Conformant? conformant;
-        private CircleGenList? filesList;
-        private Image? qrCodeView;
-        private GenItemClass? stringGenItemClass;
         private readonly UserPermission userPermission = new();
-        private string currentDir = "/home/owner/media/Images";
-        private string? selectedFile;
-        private string selectedFileKey = "selectedFile";
+        private WidgetState? state;
+        private FilesPage? filesPage;
+        private ImagePage? imagePage;
+        private AdjustmentsPage? adjustmentsPage;
 
         public override async void OnCreate(Bundle content, int w, int h)
         {
             base.OnCreate(content, w, h);
 
-            try
-            {
-                selectedFile = content.GetItem<string>(selectedFileKey);
-            }
-            catch { }
+            conformant = new Conformant(Window);
+            conformant.Show();
+
+            state = BundleManager.Load(content);
 
             if (!await userPermission.CheckAndRequestPermission(Utility.StoragePrivilege))
                 Exit();
-            else if (!string.IsNullOrWhiteSpace(selectedFile) && File.Exists(selectedFile))
-                InitQrLayout();
+            else if (state != null)
+                imagePage = new ImagePage(Window, conformant, state);
             else
-                InitFilesLayout();
-        }
-
-        private void InitFilesLayout()
-        {
-            if (filesList != null)
-                return;
-
-            InitBasicLayout();
-
-            stringGenItemClass = new GenItemClass("default");
-            stringGenItemClass.GetTextHandler = (data, _) => data is string str ? str : string.Empty;
-
-            filesList = new CircleGenList(Window, new CircleSurface(conformant));
-            filesList.ItemSelected += OnFileSelected;
-
-            conformant?.SetContent(filesList);
-            filesList.Show();
-            FillFilesList();
-        }
-
-        private void InitBasicLayout()
-        {
-            filesList?.Hide();
-            filesList = null;
-
-            qrCodeView?.Hide();
-            qrCodeView = null;
-
-            if (conformant != null)
-                return;
-
-            conformant = new Conformant(Window);
-            conformant.Show();
-        }
-
-        private void OnFileSelected(object sender, GenListItemEventArgs e)
-        {
-            if (!(e.Item.Data is string fileOrDir))
-                return;
-
-            var newFileOrDir = currentDir + fileOrDir;
-            if (!Uri.IsWellFormedUriString(newFileOrDir, UriKind.RelativeOrAbsolute))
-                return;
-
-            if (Directory.Exists(newFileOrDir))
             {
-                currentDir = newFileOrDir;
-                FillFilesList();
+                filesPage = new FilesPage(Window, conformant);
+                filesPage.LoadImage += (_, file) =>
+                {
+                    state = new WidgetState(file);
+                    adjustmentsPage = new AdjustmentsPage(Window, conformant, state);
+                    adjustmentsPage.Finished += (_, newState) =>
+                    {
+                        state = newState;
+                        BundleManager.Save(state, SetContent);
+                        imagePage = new ImagePage(Window, conformant, state);
+                    };
+                };
             }
-            else if (File.Exists(newFileOrDir))
-            {
-                selectedFile = newFileOrDir;
-                var bundle = new Bundle();
-                bundle.AddItem(selectedFileKey, selectedFile);
-                SetContent(bundle);
-                InitQrLayout();
-            }
-        }
-
-        private void FillFilesList()
-        {
-            if (filesList == null)
-                return;
-
-            filesList.Clear();
-            filesList.Append(stringGenItemClass, "Select image:");
-
-            var files = Directory.EnumerateFileSystemEntries(currentDir)
-                .Select(e => e.Remove(0, currentDir.Length));
-            foreach (var file in files)
-                filesList.Append(stringGenItemClass, file, GenListItemType.Normal);
-
-            filesList.Append(stringGenItemClass, string.Empty);
-        }
-
-        private void InitQrLayout()
-        {
-            if (string.IsNullOrWhiteSpace(selectedFile))
-                return;
-
-            InitBasicLayout();
-
-            filesList?.Hide();
-            filesList = null;
-
-            qrCodeView = new Image(Window);
-            qrCodeView.Load(selectedFile);
-            qrCodeView.Show();
-            conformant?.SetContent(qrCodeView);
+                
         }
     }
 }
