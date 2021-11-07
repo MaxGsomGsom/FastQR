@@ -1,4 +1,11 @@
-﻿using ElmSharp;
+﻿// Copyright 2021 Russian Post
+// This source code is Russian Post Confidential Proprietary.
+// This software is protected by copyright. All rights and titles are reserved.
+// You shall not use, copy, distribute, modify, decompile, disassemble or reverse engineer the software.
+// Otherwise this violation would be treated by law and would be subject to legal prosecution.
+// Legal use of the software provides receipt of a license from the right holder only.
+
+using ElmSharp;
 using System;
 using System.IO;
 using System.Linq;
@@ -86,6 +93,9 @@ namespace FastQR
             else if (File.Exists(newFileOrDir))
             {
                 selectedFile = newFileOrDir;
+                var bundle = new Bundle();
+                bundle.AddItem(selectedFileKey, selectedFile);
+                SetContent(bundle);
                 InitQrLayout();
             }
         }
@@ -120,13 +130,6 @@ namespace FastQR
             qrCodeView.Load(selectedFile);
             qrCodeView.Show();
             conformant?.SetContent(qrCodeView);
-        }
-
-        /// <inheritdoc />
-        public override void OnDestroy(WidgetDestroyType reason, Bundle content)
-        {
-            content.AddItem(selectedFileKey, selectedFile);
-            base.OnDestroy(reason, content);
         }
     }
 }

@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest package="org.tizen.example.FastQR" version="1.0.0" api-version="4" xmlns="http://tizen.org/ns/packages">
-  <profile name="wearable" />
-  <widget-application appid="org.tizen.example.FastQR" exec="FastQR.dll" multiple="false" nodisplay="false" taskmanage="true" type="dotnet" launch_mode="single">
-    <label>FastQR</label>
-    <icon>FastQR.png</icon>
-    <metadata key="http://tizen.org/metadata/prefer_dotnet_aot" value="true" />
-    <support-size preview="FastQR.png">2x2</support-size>
-    <splash-screens />
-  </widget-application>
-  <shortcut-list />
-  <privileges>
-    <privilege>http://tizen.org/privilege/mediastorage</privilege>
-  </privileges>
-  <dependencies />
-  <provides-appdefined-privileges />
+<manifest package="ru.MaxKuzmin.FastQR" version="1.0.0" api-version="4" xmlns="http://tizen.org/ns/packages">
+    <profile name="wearable" />
+    <widget-application appid="ru.MaxKuzmin.FastQR" exec="FastQR.dll" multiple="false" nodisplay="false" taskmanage="true" type="dotnet" launch_mode="single">
+        <label>FastQR</label>
+        <icon>FastQR.png</icon>
+        <metadata key="http://tizen.org/metadata/prefer_dotnet_aot" value="true" />
+        <support-size preview="FastQR.png">2x2</support-size>
+        <splash-screens />
+    </widget-application>
+    <shortcut-list />
+    <privileges>
+        <privilege>http://tizen.org/privilege/mediastorage</privilege>
+    </privileges>
+    <dependencies />
+    <provides-appdefined-privileges />
 </manifest>
