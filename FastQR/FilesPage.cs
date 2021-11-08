@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using ElmSharp;
 using ElmSharp.Wearable;
 
@@ -12,11 +10,12 @@ namespace FastQR
     {
         private readonly Window window;
         private readonly Conformant conformant;
-        private string currentDir = "/home/owner/media/Images";
         private readonly CircleGenList filesList;
         private readonly GenItemClass stringGenItemClass;
 
         public event EventHandler<string>? LoadImage;
+
+        private string currentDir = "/home/owner/media/Images";
 
         public FilesPage(Window window, Conformant conformant)
         {

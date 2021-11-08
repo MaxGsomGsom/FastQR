@@ -25,9 +25,7 @@ namespace FastQR
                     case CheckResult.Ask:
                         PrivacyPrivilegeManager.GetResponseContext(privilege).TryGetTarget(out PrivacyPrivilegeManager.ResponseContext context);
                         if (context == null)
-                        {
                             return false;
-                        }
                         tcs = new TaskCompletionSource<bool>();
                         context.ResponseFetched += PPMResponseHandler;
                         PrivacyPrivilegeManager.RequestPermission(privilege);

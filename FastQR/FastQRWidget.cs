@@ -6,8 +6,8 @@ namespace FastQR
 {
     public class FastQRWidget : WidgetBase
     {
-        private Conformant? conformant;
         private readonly UserPermission userPermission = new();
+        private Conformant? conformant;
         private string? file;
         private FilesPage? filesPage;
         private ImagePage? imagePage;
@@ -22,7 +22,7 @@ namespace FastQR
             
             conformant = new Conformant(Window);
             conformant.Show();
-            file = BundleManager.Load(content);
+            file = Utility.Load(content);
             if (file != null)
             {
                 imagePage = new ImagePage(Window, conformant, file);
@@ -44,7 +44,7 @@ namespace FastQR
         private void OpenImagePage(object _, EventArgs e)
         {
             adjustmentsPage?.Dispose();
-            BundleManager.Save(file, SetContent);
+            Utility.Save(file, SetContent);
             imagePage = new ImagePage(Window, conformant!, file);
         }
     }

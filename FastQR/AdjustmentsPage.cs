@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Numerics;
-using System.Text;
 using ElmSharp;
 using ElmSharp.Wearable;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SharpColor = SixLabors.ImageSharp.Color;
+using Tizen.System;
 using ElmColor = ElmSharp.Color;
 using ElmImage = ElmSharp.Image;
-using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SharpImage = SixLabors.ImageSharp.Image;
 
 namespace FastQR
@@ -19,26 +15,31 @@ namespace FastQR
     public sealed class AdjustmentsPage : IDisposable
     {
         private readonly RotarySelectorItem bigger;
-        private readonly RotarySelectorItem smaller;
+        private RotarySelectorItem smaller;
         private readonly RotarySelectorItem moveRight;
         private readonly RotarySelectorItem moveLeft;
         private readonly RotarySelectorItem moveBottom;
         private readonly RotarySelectorItem moveTop;
         private readonly RotarySelectorItem okButton;
+        private readonly int screenWidth;
+        private const int DeltaTransform = 20;
+        private const float DeltaZoom = 0.05f;
+        private readonly ElmColor GrayTransparent = ElmColor.FromRgba(0, 0, 0, 64);
+        private readonly ElmColor WhiteTransparent = ElmColor.FromRgba(255, 255, 255, 190);
+        private readonly Window window;
+        private readonly Conformant conformant;
+        private readonly string file;
+        private readonly SharpImage originalImage;
+        private readonly Background background;
+        private readonly RotarySelector rotarySelector;
 
         private string resPath => Tizen.Applications.Application.Current.DirectoryInfo.SharedResource;
 
         public event EventHandler? Finished;
 
-        private readonly Window window;
-        private readonly Conformant conformant;
-        private readonly string file;
         public float translateX = 0;
         public float translateY = 0;
         public float zoom = 1;
-        private SharpImage originalImage;
-        private readonly Background background;
-        private readonly RotarySelector rotarySelector;
 
         public AdjustmentsPage(Window window, Conformant conformant, string file)
         {
@@ -46,25 +47,20 @@ namespace FastQR
             this.conformant = conformant;
             this.file = file;
 
+            Information.TryGetValue(Utility.ScreenWidthFeature, out screenWidth);
+
             background = new Background(window);
             background.BackgroundOption = BackgroundOptions.Tile;
             background.Show();
 
             rotarySelector = new RotarySelector(window);
-            smaller = new() { NormalIconImage = new ElmImage(window) };
-            smaller.NormalIconImage.Load(Path.Combine(resPath, "Minus.png"));
-            bigger = new() { NormalIconImage = new ElmImage(window) };
-            bigger.NormalIconImage.Load(Path.Combine(resPath, "Plus.png"));
-            moveRight = new() { NormalIconImage = new ElmImage(window) };
-            moveRight.NormalIconImage.Load(Path.Combine(resPath, "Right.png"));
-            moveLeft = new() { NormalIconImage = new ElmImage(window) };
-            moveLeft.NormalIconImage.Load(Path.Combine(resPath, "Left.png"));
-            moveBottom = new() { NormalIconImage = new ElmImage(window) };
-            moveBottom.NormalIconImage.Load(Path.Combine(resPath, "Bottom.png"));
-            moveTop = new() { NormalIconImage = new ElmImage(window) };
-            moveTop.NormalIconImage.Load(Path.Combine(resPath, "Top.png"));
-            okButton = new() { NormalIconImage = new ElmImage(window) };
-            okButton.NormalIconImage.Load(Path.Combine(resPath, "Ok.png"));
+            smaller = CreateButton("Minus.png");
+            bigger = CreateButton("Plus.png");
+            moveRight = CreateButton("Right.png");
+            moveLeft = CreateButton("Left.png");
+            moveBottom = CreateButton("Bottom.png");
+            moveTop = CreateButton("Top.png");
+            okButton = CreateButton("Ok.png");
             rotarySelector.Items.Add(smaller);
             rotarySelector.Items.Add(bigger);
             rotarySelector.Items.Add(moveRight);
@@ -73,7 +69,7 @@ namespace FastQR
             rotarySelector.Items.Add(moveTop);
             rotarySelector.Items.Add(okButton);
 
-            rotarySelector.BackgroundColor = ElmColor.FromRgba(0, 0, 0, 64);
+            rotarySelector.BackgroundColor = GrayTransparent;
             rotarySelector.Show();
             conformant.SetContent(background);
 
@@ -84,22 +80,32 @@ namespace FastQR
             background.File = Utility.GetTransformedFile(file);
         }
 
+        private RotarySelectorItem CreateButton(string icon)
+        {
+            var result = new RotarySelectorItem() { NormalIconImage = new ElmImage(window) };
+            result.NormalIconImage.Load(Path.Combine(resPath, icon));
+            result.NormalBackgroundColor = WhiteTransparent;
+            result.SelectedBackgroundColor = WhiteTransparent;
+            result.PressedBackgroundColor = WhiteTransparent;
+            return result;
+        }
+
         private void OnSelectorOnClicked(object s, RotarySelectorItemEventArgs e)
         {
-            using var sharpImage = originalImage.Clone(e => { });
+            using var sharpImage = originalImage.Clone(_ => { });
 
             if (e.Item == moveBottom)
-                translateY -= 20;
+                translateY -= DeltaTransform;
             else if (e.Item == moveTop)
-                translateY += 20;
+                translateY += DeltaTransform;
             else if (e.Item == moveLeft)
-                translateX += 20;
+                translateX += DeltaTransform;
             else if (e.Item == moveRight)
-                translateX -= 20;
+                translateX -= DeltaTransform;
             else if (e.Item == smaller)
-                zoom -= 0.05f;
+                zoom -= DeltaZoom;
             else if (e.Item == bigger)
-                zoom += 0.05f;
+                zoom += DeltaZoom;
             else if (e.Item == okButton)
             {
                 Finished?.Invoke(this, EventArgs.Empty);
@@ -126,6 +132,8 @@ namespace FastQR
                 var y = sharpImage.Height * zoom;
                 sharpImage.Mutate(img => img.Resize((int)x, (int)y));
             }
+
+            sharpImage.Mutate(img => img.Crop(screenWidth, screenWidth));
         }
 
         /// <inheritdoc />
