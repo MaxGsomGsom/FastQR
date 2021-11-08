@@ -16,6 +16,7 @@ namespace FastQR
             this.file = file;
 
             background = new Background(window);
+            background.BackgroundOption = BackgroundOptions.Tile;
             background.Show();
             conformant.SetContent(background);
             background.File = Utility.GetTransformedFile(file);

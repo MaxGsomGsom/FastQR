@@ -11,6 +11,7 @@ using SixLabors.ImageSharp.Processing;
 using SharpColor = SixLabors.ImageSharp.Color;
 using ElmColor = ElmSharp.Color;
 using ElmImage = ElmSharp.Image;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SharpImage = SixLabors.ImageSharp.Image;
 
 namespace FastQR
@@ -35,6 +36,7 @@ namespace FastQR
         public float translateX = 0;
         public float translateY = 0;
         public float zoom = 1;
+        private SharpImage originalImage;
         private readonly Background background;
         private readonly RotarySelector rotarySelector;
 
@@ -45,6 +47,7 @@ namespace FastQR
             this.file = file;
 
             background = new Background(window);
+            background.BackgroundOption = BackgroundOptions.Tile;
             background.Show();
 
             rotarySelector = new RotarySelector(window);
@@ -76,23 +79,23 @@ namespace FastQR
 
             rotarySelector.Clicked += OnSelectorOnClicked;
 
-            using var sharpImage = SharpImage.Load(file);
-            sharpImage.SaveAsPng(Utility.GetTransformedFile(file));
+            originalImage = SharpImage.Load(file);
+            originalImage.SaveAsPng(Utility.GetTransformedFile(file));
             background.File = Utility.GetTransformedFile(file);
         }
 
         private void OnSelectorOnClicked(object s, RotarySelectorItemEventArgs e)
         {
-            using var sharpImage = SharpImage.Load(file);
+            using var sharpImage = originalImage.Clone(e => { });
 
             if (e.Item == moveBottom)
-                translateY += sharpImage.Height * 0.05f;
+                translateY -= 20;
             else if (e.Item == moveTop)
-                translateY -= sharpImage.Height * 0.05f;
+                translateY += 20;
             else if (e.Item == moveLeft)
-                translateX -= sharpImage.Width * 0.05f;
+                translateX += 20;
             else if (e.Item == moveRight)
-                translateX += sharpImage.Width * 0.05f;
+                translateX -= 20;
             else if (e.Item == smaller)
                 zoom -= 0.05f;
             else if (e.Item == bigger)
@@ -110,16 +113,19 @@ namespace FastQR
 
         private void TransformImage(SharpImage sharpImage)
         {
-            var transformBuilder = new AffineTransformBuilder();
-            transformBuilder.AppendTranslation(new Vector2(translateX, translateY));
-            sharpImage.Mutate(img => img.Transform(transformBuilder));
-            
-            var x = sharpImage.Width * 1/zoom;
-            var y = sharpImage.Height * 1/zoom;
-            if (zoom < 1)
-                sharpImage.Mutate(img => img.Pad((int)x, (int)y, SharpColor.White));
-            else
-                sharpImage.Mutate(img => img.Crop((int)x, (int)y));
+            if (translateX != 0 || translateY != 0)
+            {
+                var transformBuilder = new AffineTransformBuilder();
+                transformBuilder.AppendTranslation(new Vector2(translateX, translateY));
+                sharpImage.Mutate(img => img.Transform(transformBuilder));
+            }
+
+            if (Math.Abs(zoom - 1f) > 0.001f)
+            {
+                var x = sharpImage.Width * zoom;
+                var y = sharpImage.Height * zoom;
+                sharpImage.Mutate(img => img.Resize((int)x, (int)y));
+            }
         }
 
         /// <inheritdoc />
