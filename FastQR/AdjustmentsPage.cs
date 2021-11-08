@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -14,36 +15,55 @@ using SharpImage = SixLabors.ImageSharp.Image;
 
 namespace FastQR
 {
-    public sealed class AdjustmentsPage
+    public sealed class AdjustmentsPage : IDisposable
     {
-        private readonly RotarySelectorItem zoomIn = new() { MainText = "zoomIn" };
-        private readonly RotarySelectorItem zoomOut = new() { MainText = "zoomOut" };
-        private readonly RotarySelectorItem moveRight = new() { MainText = "moveRight" };
-        private readonly RotarySelectorItem moveLeft = new() { MainText = "moveLeft" };
-        private readonly RotarySelectorItem moveBottom = new() { MainText = "moveBottom" };
-        private readonly RotarySelectorItem moveTop = new() { MainText = "moveTop" };
-        private readonly RotarySelectorItem okButton = new() { MainText = "okButton" };
+        private readonly RotarySelectorItem bigger;
+        private readonly RotarySelectorItem smaller;
+        private readonly RotarySelectorItem moveRight;
+        private readonly RotarySelectorItem moveLeft;
+        private readonly RotarySelectorItem moveBottom;
+        private readonly RotarySelectorItem moveTop;
+        private readonly RotarySelectorItem okButton;
 
-        public event EventHandler<WidgetState>? Finished;
+        private string resPath => Tizen.Applications.Application.Current.DirectoryInfo.SharedResource;
+
+        public event EventHandler? Finished;
 
         private readonly Window window;
         private readonly Conformant conformant;
-        private readonly WidgetState state;
+        private readonly string file;
+        public float translateX = 0;
+        public float translateY = 0;
+        public float zoom = 1;
         private readonly Background background;
         private readonly RotarySelector rotarySelector;
 
-        public AdjustmentsPage(Window window, Conformant conformant, WidgetState state)
+        public AdjustmentsPage(Window window, Conformant conformant, string file)
         {
             this.window = window;
             this.conformant = conformant;
-            this.state = state;
+            this.file = file;
 
             background = new Background(window);
             background.Show();
 
             rotarySelector = new RotarySelector(window);
-            rotarySelector.Items.Add(zoomIn);
-            rotarySelector.Items.Add(zoomOut);
+            smaller = new() { NormalIconImage = new ElmImage(window) };
+            smaller.NormalIconImage.Load(Path.Combine(resPath, "Minus.png"));
+            bigger = new() { NormalIconImage = new ElmImage(window) };
+            bigger.NormalIconImage.Load(Path.Combine(resPath, "Plus.png"));
+            moveRight = new() { NormalIconImage = new ElmImage(window) };
+            moveRight.NormalIconImage.Load(Path.Combine(resPath, "Right.png"));
+            moveLeft = new() { NormalIconImage = new ElmImage(window) };
+            moveLeft.NormalIconImage.Load(Path.Combine(resPath, "Left.png"));
+            moveBottom = new() { NormalIconImage = new ElmImage(window) };
+            moveBottom.NormalIconImage.Load(Path.Combine(resPath, "Bottom.png"));
+            moveTop = new() { NormalIconImage = new ElmImage(window) };
+            moveTop.NormalIconImage.Load(Path.Combine(resPath, "Top.png"));
+            okButton = new() { NormalIconImage = new ElmImage(window) };
+            okButton.NormalIconImage.Load(Path.Combine(resPath, "Ok.png"));
+            rotarySelector.Items.Add(smaller);
+            rotarySelector.Items.Add(bigger);
             rotarySelector.Items.Add(moveRight);
             rotarySelector.Items.Add(moveLeft);
             rotarySelector.Items.Add(moveBottom);
@@ -51,49 +71,62 @@ namespace FastQR
             rotarySelector.Items.Add(okButton);
 
             rotarySelector.BackgroundColor = ElmColor.FromRgba(0, 0, 0, 64);
-            background.SetContent(rotarySelector);
+            rotarySelector.Show();
             conformant.SetContent(background);
 
             rotarySelector.Clicked += OnSelectorOnClicked;
 
-            using var sharpImage = SharpImage.Load(state.File);
-            sharpImage.SaveAsPng(state.TransformedFile);
-            background.File = state.TransformedFile;
+            using var sharpImage = SharpImage.Load(file);
+            sharpImage.SaveAsPng(Utility.GetTransformedFile(file));
+            background.File = Utility.GetTransformedFile(file);
         }
 
         private void OnSelectorOnClicked(object s, RotarySelectorItemEventArgs e)
         {
-            using var sharpImage = SharpImage.Load(state.File);
+            using var sharpImage = SharpImage.Load(file);
 
             if (e.Item == moveBottom)
-                state.TranslateY += sharpImage.Height * 0.1f;
+                translateY += sharpImage.Height * 0.05f;
             else if (e.Item == moveTop)
-                state.TranslateY -= sharpImage.Height * 0.1f;
+                translateY -= sharpImage.Height * 0.05f;
             else if (e.Item == moveLeft)
-                state.TranslateX -= sharpImage.Width * 0.1f;
+                translateX -= sharpImage.Width * 0.05f;
             else if (e.Item == moveRight)
-                state.TranslateX += sharpImage.Width * 0.1f;
-            else if (e.Item == zoomIn)
-                state.Zoom *= 0.1f;
-            else if (e.Item == zoomOut)
-                state.Zoom *= 0.1f;
+                translateX += sharpImage.Width * 0.05f;
+            else if (e.Item == smaller)
+                zoom -= 0.05f;
+            else if (e.Item == bigger)
+                zoom += 0.05f;
             else if (e.Item == okButton)
-                Finished?.Invoke(this, state);
-
-            var transformBuilder = new AffineTransformBuilder();
-            if (state.Zoom > 1)
-                transformBuilder.AppendScale(state.Zoom);
-            transformBuilder.AppendTranslation(new Vector2(state.TranslateX, state.TranslateY));
-            sharpImage.Mutate(x => x.Transform(transformBuilder));
-            if (state.Zoom < 1)
             {
-                var x = sharpImage.Width * state.Zoom;
-                var y = sharpImage.Height * state.Zoom;
-                sharpImage.Mutate(e => e.Pad((int)x, (int)y, SharpColor.White));
+                Finished?.Invoke(this, EventArgs.Empty);
+                return;
             }
 
-            sharpImage.SaveAsPng(state.TransformedFile);
-            background.File = state.TransformedFile;
+            TransformImage(sharpImage);
+            sharpImage.SaveAsPng(Utility.GetTransformedFile(file));
+            background.File = Utility.GetTransformedFile(file);
+        }
+
+        private void TransformImage(SharpImage sharpImage)
+        {
+            var transformBuilder = new AffineTransformBuilder();
+            transformBuilder.AppendTranslation(new Vector2(translateX, translateY));
+            sharpImage.Mutate(img => img.Transform(transformBuilder));
+            
+            var x = sharpImage.Width * 1/zoom;
+            var y = sharpImage.Height * 1/zoom;
+            if (zoom < 1)
+                sharpImage.Mutate(img => img.Pad((int)x, (int)y, SharpColor.White));
+            else
+                sharpImage.Mutate(img => img.Crop((int)x, (int)y));
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            background.Hide();
+            rotarySelector.Hide();
         }
     }
 }

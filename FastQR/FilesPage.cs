@@ -8,7 +8,7 @@ using ElmSharp.Wearable;
 
 namespace FastQR
 {
-    public sealed class FilesPage
+    public sealed class FilesPage : IDisposable
     {
         private readonly Window window;
         private readonly Conformant conformant;
@@ -60,11 +60,18 @@ namespace FastQR
             filesList.Append(stringGenItemClass, "Select image:");
 
             var files = Directory.EnumerateFileSystemEntries(currentDir)
-                .Select(e => e.Remove(0, currentDir.Length));
+                .Select(e => e.Remove(0, currentDir.Length))
+                .Where(e => !e.Contains(Utility.Extension));
             foreach (var file in files)
                 filesList.Append(stringGenItemClass, file, GenListItemType.Normal);
 
             filesList.Append(stringGenItemClass, string.Empty);
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            filesList.Hide();
         }
     }
 }

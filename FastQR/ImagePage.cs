@@ -6,19 +6,19 @@ namespace FastQR
     {
         private readonly Window window;
         private readonly Conformant conformant;
-        private readonly WidgetState state;
+        private readonly string file;
         private readonly Background background;
 
-        public ImagePage(Window window, Conformant conformant, WidgetState state)
+        public ImagePage(Window window, Conformant conformant, string file)
         {
             this.window = window;
             this.conformant = conformant;
-            this.state = state;
+            this.file = file;
 
             background = new Background(window);
             background.Show();
             conformant.SetContent(background);
-            background.File = state.TransformedFile;
+            background.File = Utility.GetTransformedFile(file);
         }
     }
 }

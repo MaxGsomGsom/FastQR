@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using Tizen.Applications;
-using Tizen.NUI;
 
 namespace FastQR
 {
@@ -12,12 +7,11 @@ namespace FastQR
     {
         private const string Key = "widgetState";
 
-        public static WidgetState? Load(Bundle bundle)
+        public static string? Load(Bundle bundle)
         {
             try
             {
-                var json = bundle.GetItem<string>(Key);
-                return JsonSerializer.Deserialize<WidgetState>(json);
+                return bundle.GetItem<string>(Key);
             }
             catch
             {
@@ -25,13 +19,13 @@ namespace FastQR
             }
         }
 
-        public static void Save(WidgetState? state, Action<Bundle> setContent)
+        public static void Save(string? file, Action<Bundle> setContent)
         {
-            if (state == null)
+            if (file == null)
                 return;
 
             var bundle = new Bundle();
-            bundle.AddItem(Key, JsonSerializer.Serialize(state));
+            bundle.AddItem(Key, file);
             setContent(bundle);
         }
     }
