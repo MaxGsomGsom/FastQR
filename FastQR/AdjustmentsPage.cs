@@ -6,6 +6,7 @@ using ElmSharp.Wearable;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using Tizen.System;
+using Color = SixLabors.ImageSharp.Color;
 using ElmColor = ElmSharp.Color;
 using ElmImage = ElmSharp.Image;
 using SharpImage = SixLabors.ImageSharp.Image;
@@ -51,6 +52,7 @@ namespace FastQR
 
             background = new Background(window);
             background.BackgroundOption = BackgroundOptions.Tile;
+            background.Color = ElmColor.White;
             background.Show();
 
             rotarySelector = new RotarySelector(window);
@@ -76,6 +78,8 @@ namespace FastQR
             rotarySelector.Clicked += OnSelectorOnClicked;
 
             originalImage = SharpImage.Load(file);
+            var padding = (int)(screenWidth * 1.5);
+            originalImage.Mutate(img => img.Pad(padding, padding, Color.White));
             originalImage.SaveAsPng(Utility.GetTransformedFile(file));
             background.File = Utility.GetTransformedFile(file);
         }
@@ -133,7 +137,10 @@ namespace FastQR
                 sharpImage.Mutate(img => img.Resize((int)x, (int)y));
             }
 
-            sharpImage.Mutate(img => img.Crop(screenWidth, screenWidth));
+            try
+            {
+                sharpImage.Mutate(img => img.Crop(screenWidth, screenWidth));
+            } catch {}
         }
 
         /// <inheritdoc />
