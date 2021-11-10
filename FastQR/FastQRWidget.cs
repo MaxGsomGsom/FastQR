@@ -26,6 +26,7 @@ namespace FastQR
             if (file != null)
             {
                 imagePage = new ImagePage(Window, conformant, file);
+                await imagePage.Init();
                 return;
             }
             
@@ -33,19 +34,21 @@ namespace FastQR
             filesPage.LoadImage += OpenAdjustmentPage;
         }
 
-        private void OpenAdjustmentPage(object _, string newFile)
+        private async void OpenAdjustmentPage(object _, string newFile)
         {
             filesPage?.Dispose();
             file = newFile;
             adjustmentsPage = new AdjustmentsPage(Window, conformant!, file);
             adjustmentsPage.Finished += OpenImagePage;
+            await adjustmentsPage.Init();
         }
 
-        private void OpenImagePage(object _, EventArgs e)
+        private async void OpenImagePage(object _, EventArgs e)
         {
             adjustmentsPage?.Dispose();
             Utility.Save(file, SetContent);
-            imagePage = new ImagePage(Window, conformant!, file);
+            imagePage = new ImagePage(Window, conformant!, file!);
+            await imagePage.Init();
         }
     }
 }

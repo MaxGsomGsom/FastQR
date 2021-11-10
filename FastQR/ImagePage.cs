@@ -1,4 +1,5 @@
-﻿using ElmSharp;
+﻿using System.Threading.Tasks;
+using ElmSharp;
 
 namespace FastQR
 {
@@ -7,7 +8,7 @@ namespace FastQR
         private readonly Window window;
         private readonly Conformant conformant;
         private readonly string file;
-        private readonly Background background;
+        private readonly Image background;
 
         public ImagePage(Window window, Conformant conformant, string file)
         {
@@ -15,12 +16,19 @@ namespace FastQR
             this.conformant = conformant;
             this.file = file;
 
-            background = new Background(window);
-            background.BackgroundOption = BackgroundOptions.Tile;
-            background.Color = Color.White;
+            background = new Image(window)
+            {
+                BackgroundColor = Color.White,
+                IsScaling = false,
+                CanFillOutside = true
+            };
             background.Show();
             conformant.SetContent(background);
-            background.File = Utility.GetTransformedFile(file);
+        }
+
+        public async Task Init()
+        {
+            await background.LoadAsync(Utility.GetTransformedFile(file));
         }
     }
 }
