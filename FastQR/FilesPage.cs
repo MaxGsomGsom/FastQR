@@ -38,7 +38,10 @@ namespace FastQR
             if (!(e.Item.Data is string fileOrDir))
                 return;
 
-            var newFileOrDir = currentDir + fileOrDir;
+            if (string.IsNullOrWhiteSpace(fileOrDir) || fileOrDir == "Select image:")
+                return;
+
+            var newFileOrDir = currentDir + "/" + fileOrDir;
             if (Directory.Exists(newFileOrDir))
             {
                 currentDir = newFileOrDir;
@@ -57,6 +60,7 @@ namespace FastQR
 
             var files = Directory.EnumerateFileSystemEntries(currentDir)
                 .Select(e => e.Remove(0, currentDir.Length))
+                .Select(e => e.Trim('/'))
                 .Where(e => !e.Contains(Utility.Extension));
             foreach (var file in files)
                 filesList.Append(stringGenItemClass, file, GenListItemType.Normal);
