@@ -31,7 +31,7 @@ namespace FastQR
         private readonly Conformant conformant;
         private readonly string file;
         private SharpImage? originalImage;
-        private readonly MemoryStream modifiedImage = new();
+        private SharpImage? zoomedImage;
         private readonly ElmImage background;
         private readonly RotarySelector rotarySelector;
 
@@ -39,9 +39,10 @@ namespace FastQR
 
         public event EventHandler? Finished;
 
-        public float translateX = 0;
-        public float translateY = 0;
+        public float translateX;
+        public float translateY;
         public float zoom = 1;
+        public float basicZoom;
 
         public AdjustmentsPage(Window window, Conformant conformant, string file)
         {
@@ -83,25 +84,18 @@ namespace FastQR
         public async Task Init()
         {
             originalImage = await SharpImage.LoadAsync(file);
-            FixSize(originalImage, originalImage.Width);
-            FixSize(originalImage, originalImage.Height);
+            basicZoom = screenWidth / (float)Math.Max(originalImage.Height, originalImage.Width);
+            zoomedImage = originalImage.Clone(ctx =>
+            {
+                var transformBuilder = new AffineTransformBuilder();
+                transformBuilder.AppendScale(basicZoom);
+                ctx.Transform(transformBuilder);
+            });
 
             await OnSelectorOnClicked(this, new RotarySelectorItemEventArgs());
 
             async void OnRotarySelectorOnClicked(object s, RotarySelectorItemEventArgs e) => await OnSelectorOnClicked(s, e);
             rotarySelector.Clicked += OnRotarySelectorOnClicked;
-        }
-
-        private void FixSize(SharpImage image, int size)
-        {
-            var maxSize = screenWidth * 2;
-            if (size > maxSize)
-            {
-                var scale = size / (float)maxSize;
-                originalImage.Mutate(img =>img.Resize(
-                    (int)(image.Width / scale),
-                    (int)(image.Height / scale)));
-            }
         }
 
         private RotarySelectorItem CreateButton(string icon)
@@ -116,8 +110,6 @@ namespace FastQR
 
         private async Task OnSelectorOnClicked(object s, RotarySelectorItemEventArgs e)
         {
-            using var sharpImage = originalImage.Clone(_ => { });
-
             if (e.Item == moveBottom)
                 translateY += DeltaTransform;
             else if (e.Item == moveTop)
@@ -132,35 +124,30 @@ namespace FastQR
                 zoom += DeltaZoom;
             else if (e.Item == okButton)
             {
-                TransformImage(sharpImage);
-                await sharpImage.SaveAsPngAsync(Utility.GetTransformedFile(file));
+                using var finalImage = originalImage.Clone(ctx =>
+                {
+                    var transformBuilder = new AffineTransformBuilder();
+                    transformBuilder.AppendScale(basicZoom);
+                    transformBuilder.AppendTranslation(new Vector2(translateX, translateY));
+                    transformBuilder.AppendScale(zoom);
+                    ctx.Transform(transformBuilder);
+                });
+                await finalImage.SaveAsPngAsync(Utility.GetTransformedFile(file));
                 Finished?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
-            TransformImage(sharpImage);
-            modifiedImage.Position = 0;
-            modifiedImage.SetLength(0);
-            await sharpImage.SaveAsPngAsync(modifiedImage);
-            modifiedImage.Position = 0;
-            await background.LoadAsync(modifiedImage);
-        }
-
-        private void TransformImage(SharpImage sharpImage)
-        {
-            if (translateX != 0 || translateY != 0)
+            using var modifiedImage = zoomedImage.Clone(ctx =>
             {
                 var transformBuilder = new AffineTransformBuilder();
                 transformBuilder.AppendTranslation(new Vector2(translateX, translateY));
-                sharpImage.Mutate(img => img.Transform(transformBuilder));
-            }
-
-            if (Math.Abs(zoom - 1f) > 0.001f)
-            {
-                var x = sharpImage.Width * zoom;
-                var y = sharpImage.Height * zoom;
-                sharpImage.Mutate(img => img.Resize((int)x, (int)y));
-            }
+                transformBuilder.AppendScale(zoom);
+                ctx.Transform(transformBuilder);
+            });
+            var stream = new MemoryStream();
+            await modifiedImage.SaveAsPngAsync(stream);
+            stream.Position = 0;
+            await background.LoadAsync(stream);
         }
 
         /// <inheritdoc />
