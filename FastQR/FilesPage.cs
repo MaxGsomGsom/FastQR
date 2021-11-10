@@ -39,9 +39,6 @@ namespace FastQR
                 return;
 
             var newFileOrDir = currentDir + fileOrDir;
-            if (!Uri.IsWellFormedUriString(newFileOrDir, UriKind.RelativeOrAbsolute))
-                return;
-
             if (Directory.Exists(newFileOrDir))
             {
                 currentDir = newFileOrDir;
