@@ -31,7 +31,7 @@ namespace FastQR
         private readonly Conformant conformant;
         private readonly string file;
         private SharpImage? originalImage;
-        private MemoryStream? modifiedImage;
+        private readonly MemoryStream modifiedImage = new();
         private readonly ElmImage background;
         private readonly RotarySelector rotarySelector;
 
@@ -83,10 +83,25 @@ namespace FastQR
         public async Task Init()
         {
             originalImage = await SharpImage.LoadAsync(file);
+            FixSize(originalImage, originalImage.Width);
+            FixSize(originalImage, originalImage.Height);
+
             await OnSelectorOnClicked(this, new RotarySelectorItemEventArgs());
 
             async void OnRotarySelectorOnClicked(object s, RotarySelectorItemEventArgs e) => await OnSelectorOnClicked(s, e);
             rotarySelector.Clicked += OnRotarySelectorOnClicked;
+        }
+
+        private void FixSize(SharpImage image, int size)
+        {
+            var maxSize = screenWidth * 2;
+            if (size > maxSize)
+            {
+                var scale = size / (float)maxSize;
+                originalImage.Mutate(img =>img.Resize(
+                    (int)(image.Width / scale),
+                    (int)(image.Height / scale)));
+            }
         }
 
         private RotarySelectorItem CreateButton(string icon)
@@ -124,7 +139,8 @@ namespace FastQR
             }
 
             TransformImage(sharpImage);
-            modifiedImage = new MemoryStream();
+            modifiedImage.Position = 0;
+            modifiedImage.SetLength(0);
             await sharpImage.SaveAsPngAsync(modifiedImage);
             modifiedImage.Position = 0;
             await background.LoadAsync(modifiedImage);
@@ -144,15 +160,6 @@ namespace FastQR
                 var x = sharpImage.Width * zoom;
                 var y = sharpImage.Height * zoom;
                 sharpImage.Mutate(img => img.Resize((int)x, (int)y));
-            }
-
-            try
-            {
-                sharpImage.Mutate(img => img.Crop(screenWidth, screenWidth));
-            }
-            catch
-            {
-                // ignored
             }
         }
 
