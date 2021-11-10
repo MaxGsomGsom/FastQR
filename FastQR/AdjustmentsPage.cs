@@ -55,8 +55,9 @@ namespace FastQR
             background = new ElmImage(window)
             {
                 BackgroundColor = ElmColor.White,
-                IsScaling = false,
-                CanFillOutside = true
+                CanFillOutside = true,
+                CanScaleDown = false,
+                CanScaleUp = false
             };
             background.Show();
 
