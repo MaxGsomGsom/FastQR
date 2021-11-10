@@ -30,7 +30,7 @@ namespace FastQR
             background.Show();
             conformant.SetContent(background);
 
-            var labelToShow = file.Split('.', '/').FirstOrDefault(e => e.Contains("name:") && e.Length > 5);
+            var labelToShow = file.Split('.', '/').FirstOrDefault(e => e.Contains("name=") && e.Length > 5);
             if (labelToShow != null)
             {
                 var label = new Label(window)
