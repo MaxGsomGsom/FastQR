@@ -24,8 +24,9 @@ namespace FastQR
             background = new Image(window)
             {
                 BackgroundColor = Color.White,
-                IsScaling = false,
-                CanFillOutside = true
+                CanFillOutside = true,
+                CanScaleDown = false,
+                CanScaleUp = false
             };
             background.Show();
             conformant.SetContent(background);
