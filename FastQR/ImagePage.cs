@@ -26,7 +26,10 @@ namespace FastQR
                 BackgroundColor = Color.White,
                 CanFillOutside = true,
                 CanScaleDown = false,
-                CanScaleUp = false
+                CanScaleUp = false,
+                IsMirroredMode = false,
+                IsScaling = false,
+                IsFixedAspect = false,
             };
             background.Show();
             conformant.SetContent(background);

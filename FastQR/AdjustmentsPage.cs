@@ -57,7 +57,10 @@ namespace FastQR
                 BackgroundColor = ElmColor.White,
                 CanFillOutside = true,
                 CanScaleDown = false,
-                CanScaleUp = false
+                CanScaleUp = false,
+                IsMirroredMode = false,
+                IsScaling = false,
+                IsFixedAspect = false,
             };
             background.Show();
 
