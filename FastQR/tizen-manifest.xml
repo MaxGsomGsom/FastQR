@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest package="ru.MaxKuzmin.FastQR" version="1.0.0" api-version="4" xmlns="http://tizen.org/ns/packages">
+<manifest package="ru.MaxKuzmin.FastQR" version="1.1.0" api-version="4" xmlns="http://tizen.org/ns/packages">
     <profile name="wearable" />
     <widget-application appid="ru.MaxKuzmin.FastQR" exec="FastQR.dll" multiple="false" nodisplay="false" taskmanage="true" type="dotnet" hw-acceleration="on" launch_mode="single">
         <label>FastQR</label>

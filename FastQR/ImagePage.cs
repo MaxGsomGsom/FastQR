@@ -39,8 +39,8 @@ namespace FastQR
             {
                 var label = new Label(window)
                 {
-                    Geometry = new Rect(0, 0, screenWidth, screenWidth),
-                    Text = $"<font_size=20 align=center>{labelToShow.Substring(5)}</font_size>",
+                    Geometry = new Rect(0, 10, screenWidth, screenWidth),
+                    Text = $"<font_size=24 align=center>{labelToShow.Substring(5)}</font_size>",
                     Color = Color.Black,
                 };
 
