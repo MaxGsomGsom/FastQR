@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest package="ru.MaxKuzmin.FastQRDummy" version="1.2.0" api-version="4" xmlns="http://tizen.org/ns/packages">
+  <author email="max-kuzmin@list.ru">Max Kuzmin</author>
+  <description />
+  <profile name="wearable" />
+  <ui-application appid="ru.MaxKuzmin.FastQRDummy" exec="FastQRDummy.dll" multiple="false" nodisplay="false" taskmanage="true" type="dotnet" launch_mode="single">
+    <label>FastQR</label>
+    <icon>FastQR.png</icon>
+    <metadata key="http://tizen.org/metadata/prefer_dotnet_aot" value="true" />
+    <splash-screens />
+  </ui-application>
+  <shortcut-list />
+  <dependencies />
+  <provides-appdefined-privileges />
+</manifest>
