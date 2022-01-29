@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ElmSharp;
 using Tizen.Applications;
 
@@ -32,6 +33,23 @@ namespace FastQR
             
             filesPage = new FilesPage(Window, conformant);
             filesPage.LoadImage += OpenAdjustmentPage;
+        }
+
+        /// <inheritdoc />
+        public override void OnDestroy(WidgetDestroyType reason, Bundle content)
+        {
+            base.OnDestroy(reason, content);
+            if (reason == WidgetDestroyType.Permanent && file != null)
+            {
+                try
+                {
+                    File.Delete(Utility.GetTransformedFile(file));
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         private async void OpenAdjustmentPage(object _, string newFile)

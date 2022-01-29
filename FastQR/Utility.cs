@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Tizen.Applications;
 
 namespace FastQR
@@ -10,7 +11,15 @@ namespace FastQR
         public const string LogTag = "FastQR";
         public const string Extension = ".fastqr";
 
-        public static string GetTransformedFile(string file) => file + Extension;
+        public static string GetTransformedFile(string file)
+        {
+            //TODO: Remove in next version
+            var compatiblePath = file + Extension;
+            if (File.Exists(compatiblePath))
+                return compatiblePath;
+
+            return Path.Combine(Path.GetDirectoryName(file), Path.GetFileNameWithoutExtension(file)) + Extension;
+        }
 
         private const string StorageKey = "widgetState";
 

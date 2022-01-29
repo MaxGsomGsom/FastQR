@@ -61,9 +61,13 @@ namespace FastQR
             var files = Directory.EnumerateFileSystemEntries(currentDir)
                 .Select(e => e.Remove(0, currentDir.Length))
                 .Select(e => e.Trim('/'))
-                .Where(e => !e.Contains(Utility.Extension));
+                .Where(e => !e.Contains(Utility.Extension))
+                .ToArray();
             foreach (var file in files)
                 filesList.Append(stringGenItemClass, file, GenListItemType.Normal);
+
+            if (!files.Any())
+                filesList.Append(stringGenItemClass, "No files");
 
             filesList.Append(stringGenItemClass, string.Empty);
         }

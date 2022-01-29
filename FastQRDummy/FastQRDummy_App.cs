@@ -33,7 +33,7 @@ namespace FastQRDummy
             var label = new Label(window)
             {
                 Text = "<font_size=28 align=center>Go to widgets list and<br>select FastQR widget there." +
-                       "<br>For more info visit<br>Galaxy Store.</font_size>",
+                       "<br>For more info visit<br>app page in Galaxy Store.</font_size>",
                 Color = Color.White
             };
             label.Show();
