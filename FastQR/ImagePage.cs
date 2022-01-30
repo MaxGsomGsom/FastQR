@@ -36,9 +36,12 @@ namespace FastQR
             conformant.SetContent(background);
 
             //TODO: "name=" replaced for back compatibility. Remove in next version
-            var labelToShow = Path.GetFileNameWithoutExtension(file).Replace("name=", "");
-            //Do not show if starts from "_"
-            if (labelToShow.Length > 0 && labelToShow[0] != '_')
+            //Do not show label if starts from "_"
+            var labelToShow = Path.GetFileNameWithoutExtension(file)
+                .Split("_")
+                .FirstOrDefault()
+                ?.Replace("name=", "");
+            if (labelToShow?.Length > 0)
             {
                 var label = new Label(window)
                 {
