@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest package="ru.MaxKuzmin.FastQR" version="1.6.0" api-version="4" xmlns="http://tizen.org/ns/packages">
+<manifest package="ru.MaxKuzmin.FastQR" version="1.7.0" api-version="4" xmlns="http://tizen.org/ns/packages">
     <author email="max-kuzmin@list.ru">Max Kuzmin</author>
     <description>Widget that shows QR code (or another image) on your smartwatches.</description>
     <profile name="wearable" />

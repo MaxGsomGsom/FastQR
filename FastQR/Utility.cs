@@ -19,6 +19,9 @@ namespace FastQR
             if (File.Exists(compatiblePath))
                 return compatiblePath;
 
+            if (!Directory.Exists(DirToSave))
+                Directory.CreateDirectory(DirToSave);
+
             return Path.Combine(DirToSave, Path.GetFileName(file) + Extension);
         }
 
