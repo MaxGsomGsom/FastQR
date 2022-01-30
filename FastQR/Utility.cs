@@ -10,6 +10,7 @@ namespace FastQR
         public const string ScreenWidthFeature = "http://tizen.org/feature/screen.width";
         public const string LogTag = "FastQR";
         public const string Extension = ".fastqr";
+        private static string DirToSave = "/home/owner/media/.FastQR";
 
         public static string GetTransformedFile(string file)
         {
@@ -18,7 +19,7 @@ namespace FastQR
             if (File.Exists(compatiblePath))
                 return compatiblePath;
 
-            return Path.Combine(Path.GetDirectoryName(file), Path.GetFileNameWithoutExtension(file)) + Extension;
+            return Path.Combine(DirToSave, Path.GetFileName(file) + Extension);
         }
 
         private const string StorageKey = "widgetState";
